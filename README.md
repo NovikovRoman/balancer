@@ -1,5 +1,7 @@
 # Balancer
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/NovikovRoman/balancer)](https://goreportcard.com/report/github.com/NovikovRoman/balancer)
+
 A library for balancing the load on services.
 
 ## Usage
