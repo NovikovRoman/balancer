@@ -67,3 +67,9 @@ func main() {
     b.SetShuffle(true) // Items will be balanced in random order.
 }
 ```
+
+## Testing
+
+```shell
+go test -race ./...
+```

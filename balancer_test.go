@@ -24,11 +24,18 @@ func TestAcquire(t *testing.T) {
 	}
 
 	b := New(items)
+	assert.Equal(t, b.NumItems(), total)
+	assert.Equal(t, b.TotalMaxRequests(), total*1)
+	assert.Equal(t, b.TotalFreeRequests(), total*1)
+
 	synctest.Test(t, func(t *testing.T) {
 		for i := range total {
 			item := b.Acquire()
 			assert.Equal(t, item.num, i)
 		}
+
+		assert.Equal(t, b.TotalMaxRequests(), total*1)
+		assert.Equal(t, b.TotalFreeRequests(), 0)
 		assert.Nil(t, b.Acquire())
 
 		time.Sleep(time.Second)
@@ -48,6 +55,8 @@ func TestAcquire(t *testing.T) {
 		items[i] = NewItem(s, 3) // 3 request per second
 	}
 	b = New(items)
+	assert.Equal(t, b.TotalMaxRequests(), total*3)
+	assert.Equal(t, b.TotalFreeRequests(), total*3)
 	synctest.Test(t, func(t *testing.T) {
 		for i := range total {
 			for range 3 {
@@ -55,6 +64,8 @@ func TestAcquire(t *testing.T) {
 				assert.Equal(t, item.num, i)
 			}
 		}
+		assert.Equal(t, b.TotalMaxRequests(), total*3)
+		assert.Equal(t, b.TotalFreeRequests(), 0)
 		assert.Nil(t, b.Acquire())
 
 		time.Sleep(time.Second)

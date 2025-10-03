@@ -7,34 +7,6 @@ import (
 	"time"
 )
 
-type Item[T any] struct {
-	item        *T
-	maxRequests int
-	numRequests int
-	timestamp   int64
-}
-
-func NewItem[T any](item *T, maxRequests int) *Item[T] {
-	return &Item[T]{item: item, maxRequests: maxRequests}
-}
-
-func (i *Item[T]) tooManyRequests() bool {
-	if time.Now().Unix() == i.timestamp {
-		return i.numRequests >= i.maxRequests
-	}
-	return false
-}
-
-func (i *Item[T]) addRequest() int {
-	t := time.Now().Unix()
-	if t != i.timestamp {
-		i.timestamp = t
-		i.numRequests = 0
-	}
-	i.numRequests++
-	return i.numRequests
-}
-
 type Balancer[T any] struct {
 	sync.RWMutex
 	items   []*Item[T]
@@ -49,6 +21,32 @@ func New[T any](items []*Item[T]) *Balancer[T] {
 
 func (b *Balancer[T]) SetShuffle(shuffle bool) {
 	b.shuffle = shuffle
+}
+
+func (b *Balancer[T]) NumItems() int {
+	b.RLock()
+	defer b.RUnlock()
+	return len(b.items)
+}
+
+func (b *Balancer[T]) TotalMaxRequests() int {
+	b.RLock()
+	defer b.RUnlock()
+	numReq := 0
+	for _, c := range b.items {
+		numReq += c.maxRequests
+	}
+	return numReq
+}
+
+func (b *Balancer[T]) TotalFreeRequests() int {
+	b.RLock()
+	defer b.RUnlock()
+	numReq := 0
+	for _, c := range b.items {
+		numReq += c.maxRequests - c.numRequests
+	}
+	return numReq
 }
 
 func (b *Balancer[T]) Acquire() *T {
